@@ -1,0 +1,20 @@
+CREATE TABLE ExerciseCreatedEvents (
+    EventId INT,
+    Version INT,
+    Timestamp DATETIME2 DEFAULT GETUTCDATE(),
+    Name VARCHAR(100),
+    Description VARCHAR(MAX),
+    Duration VARCHAR(50),
+    Reps INT,
+    Sets INT,
+    ExerciseType VARCHAR(50),
+    PRIMARY KEY (EventId, Version)
+);
+
+CREATE TABLE ExerciseDeletedEvents (
+    EventId INT,
+    Version INT,
+    Timestamp DATETIME2 DEFAULT GETUTCDATE(),
+    Name VARCHAR(100),
+    PRIMARY KEY (EventId, Version)
+);
