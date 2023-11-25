@@ -1,0 +1,47 @@
+trigger:
+- main  # Triggers the pipeline on commits to the main branch
+
+pool:
+  vmImage: 'windows-latest'  # Uses the latest Windows VM image
+
+variables:
+  buildConfiguration: 'Release'
+  functionAppName: 'CreateExercise'  # Replace with your Azure Function App name
+  workingDirectory: 'CreateExerciseFunction'  # Replace with the path to your Azure Functions project
+
+steps:
+- task: UseDotNet@2
+  displayName: 'Install .NET 7 SDK'
+  inputs:
+    version: '7.x'
+    packageType: sdk
+
+- script: dotnet build $(workingDirectory) --configuration $(buildConfiguration) --output ./$(buildConfiguration)
+  displayName: 'Build project'
+
+- script: dotnet publish $(workingDirectory) --configuration $(buildConfiguration) --output ./publish_output
+  displayName: 'Publish project'
+
+- task: ArchiveFiles@2
+  displayName: 'Archive files'
+  inputs:
+    rootFolderOrFile: './publish_output'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/functionapp.zip'
+    replaceExistingArchive: true
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifacts'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
+
+- task: AzureFunctionApp@1
+  displayName: 'Deploy to Azure Function App'
+  inputs:
+    appType: 'functionApp'
+    appName: $(functionAppName)
+    package: '$(Build.ArtifactStagingDirectory)/functionapp.zip'
+    deploymentMethod: 'auto'
